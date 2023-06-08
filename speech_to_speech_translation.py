@@ -15,7 +15,6 @@ def translate_speech():
 
     # Translate text to speech
     speech_config = speechsdk.SpeechConfig(subscription=API_KEY, endpoint=ENDPOINT)
-    speech_config.speech_synthesis_voice_name = "en-US-JessaNeural"
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
     # Creates a translation recognizer using and audio configuration
@@ -39,7 +38,7 @@ def translate_speech():
             # Speak the translated text with faster speed using SSML
             ssml_text = """
             <speak version='1.0' xmlns='https://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'>
-            <voice name='en-US-TonyNeural'>
+            <voice name='en-US-GuyNeural'>
             <mstts:express-as style='default'>
             {}
             </mstts:express-as>
