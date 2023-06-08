@@ -50,3 +50,7 @@ This tool uses Azure's real-time speech translation service, which has a delay b
 ## Contributing
 
 Contributions to improve the tool are welcome. Please feel free to submit issues and pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
