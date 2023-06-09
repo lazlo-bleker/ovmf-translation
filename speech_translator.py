@@ -8,35 +8,63 @@ class SpeechTranslator:
         self.source_language = source_language
         self.target_language = target_language
         self.done = False
+        self.last_synthesized_index = 0
+        self.intermediate_buffer = ["", "", ""]
+        self.synthesized_text = ""
 
     def stop_cb(self, evt):
-        print('CLOSING on {}'.format(evt))
+        print(f'CLOSING on {evt}')
         self.done = True
 
     def recognized_cb(self, evt, speech_synthesizer):
         if evt.result.reason == speechsdk.ResultReason.TranslatedSpeech:
-            print('Recognized: {}'.format(evt.result.text))
-            print('Translated into English: {}'.format(evt.result.translations[self.target_language]))
+            translation = evt.result.translations[self.target_language]
+            if self.synthesized_text == translation[:len(self.synthesized_text)]:
+                ok = 'OK'
+            else:
+                ok = 'ERROR'
+            print(f'Final translation ({ok}): {translation}')
+            text_to_synthesize = evt.result.translations[self.target_language][self.last_synthesized_index:]
+            self.last_synthesized_index = 0
+            self.synthesized_text = ""
+            self.synthesize_text(text_to_synthesize, speech_synthesizer)
 
-            ssml_text = """
+    def recognizing_cb(self, evt, speech_synthesizer):
+        if evt.result.reason == speechsdk.ResultReason.TranslatingSpeech:
+            self.intermediate_buffer.pop(0)
+            self.intermediate_buffer.append(evt.result.translations[self.target_language])
+
+            if all("." in text for text in self.intermediate_buffer):
+                up_to_dot = [text[:text.rindex(". ") + 1] for text in self.intermediate_buffer]
+                if up_to_dot[0] == up_to_dot[1] == up_to_dot[2]:
+                    text_to_synthesize = up_to_dot[0][self.last_synthesized_index:]
+                    self.last_synthesized_index = len(up_to_dot[0])
+                    if len(text_to_synthesize) > 0:
+                        print(f'Intermediate translation: {text_to_synthesize}')
+                        self.synthesized_text += text_to_synthesize
+                        self.synthesize_text(text_to_synthesize, speech_synthesizer)
+
+    def synthesize_text(self, text, speech_synthesizer):
+        ssml_text = """
             <speak version='1.0' xmlns='https://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'>
             <voice name='en-US-GuyNeural'>
+            <prosody rate='+30%'>
             <mstts:express-as style='default'>
             {}
             </mstts:express-as>
+            </prosody>
             </voice>
             </speak>
-            """.format(evt.result.translations[self.target_language])
+            """.format(text)
+        result_speech_synthesis = speech_synthesizer.speak_ssml_async(ssml_text).get()
 
-            result_speech_synthesis = speech_synthesizer.speak_ssml_async(ssml_text).get()
-
-            if result_speech_synthesis.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-                print('Speech synthesized for text [{}]'.format(result_speech_synthesis.text))
-            elif result_speech_synthesis.reason == speechsdk.ResultReason.Canceled:
-                cancellation_details = result_speech_synthesis.cancellation_details
-                print('Speech synthesis canceled: {}'.format(cancellation_details.reason))
-                if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                    print('Error details: {}'.format(cancellation_details.error_details))
+        if result_speech_synthesis.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            print(f'Speech synthesized for text {result_speech_synthesis.text}')
+        elif result_speech_synthesis.reason == speechsdk.ResultReason.Canceled:
+            cancellation_details = result_speech_synthesis.cancellation_details
+            print(f'Speech synthesis canceled: {cancellation_details.reason}')
+            if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                print(f'Error details: {cancellation_details.error_details}')
 
     def translate_speech(self):
         try:
@@ -51,8 +79,9 @@ class SpeechTranslator:
 
             recognizer = speechsdk.translation.TranslationRecognizer(translation_config=translation_config)
 
-            recognizer.recognized.connect(lambda evt: self.recognized_cb(evt, speech_synthesizer))
             recognizer.session_stopped.connect(self.stop_cb)
+            recognizer.recognized.connect(lambda evt: self.recognized_cb(evt, speech_synthesizer))
+            recognizer.recognizing.connect(lambda evt: self.recognizing_cb(evt, speech_synthesizer))
 
             recognizer.start_continuous_recognition()
 
@@ -62,4 +91,4 @@ class SpeechTranslator:
             recognizer.stop_continuous_recognition()
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f'An error occurred: {e}')
