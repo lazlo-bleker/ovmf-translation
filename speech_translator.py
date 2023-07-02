@@ -90,8 +90,8 @@ class SpeechTranslator:
         ssml_text = (
             "<speak version='1.0' xmlns='https://www.w3.org/2001/10/synthesis' "
             "xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'>"
-            "<voice name='en-US-GuyNeural'>"
-            "<prosody rate='+30%'>"
+            "<voice name='en-US-JennyNeural'>"
+            "<prosody rate='+0%'>"
             "<mstts:express-as style='default'>"
             f"{text}"
             "</mstts:express-as>"
