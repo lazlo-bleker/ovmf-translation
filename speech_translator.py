@@ -84,10 +84,10 @@ class SpeechTranslator:
             self.synthesized_text = ""  # Reset cumulative intermediate translations
             self.last_recognized_time = time.time()
             self._synthesize_text(text_to_synthesize, speech_synthesizer)
+        self._log(f'Delay: {str(datetime.timedelta(seconds=int(self._speech_queue_time() + 0.5)))}')
 
     def _recognizing_cb(self, evt, speech_synthesizer):
         """Callback method for when speech is being recognized and translated."""
-        self._log(f'Delay: {str(datetime.timedelta(seconds=int(self._speech_queue_time() + 0.5)))}')
         if evt.result.reason == speechsdk.ResultReason.TranslatingSpeech:
             # Update the intermediate translation buffer with the latest translation
             self.intermediate_buffer.pop(0)
