@@ -10,7 +10,7 @@ class SpeechTranslator:
     per_char_synth_time = 0.05745246
     """Class for live speech to speech translation."""
     def __init__(self, api_key: str, region: str = 'westeurope', source_language: str = 'de-DE',
-                 target_language: str = 'en', intermediate_translations: bool = True, verbose: bool = True):
+                 target_language: str = 'en', intermediate_translations: bool = False, verbose: bool = True):
         self.api_key = api_key
         self.region = region
         self.source_language = source_language
@@ -56,6 +56,8 @@ class SpeechTranslator:
         recognizer.start_continuous_recognition()
         try:
             while not self.done:
+                time.sleep(2)
+                self._log(f'Delay: {str(datetime.timedelta(seconds=int(self._speech_queue_time() + 0.5)))}')
                 pass
         except KeyboardInterrupt:
             with open(f'speech_data_pr{self.pr}.json', 'w') as f:
@@ -84,7 +86,6 @@ class SpeechTranslator:
             self.synthesized_text = ""  # Reset cumulative intermediate translations
             self.last_recognized_time = time.time()
             self._synthesize_text(text_to_synthesize, speech_synthesizer)
-        self._log(f'Delay: {str(datetime.timedelta(seconds=int(self._speech_queue_time() + 0.5)))}')
 
     def _recognizing_cb(self, evt, speech_synthesizer):
         """Callback method for when speech is being recognized and translated."""
