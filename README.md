@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://github.com/lazlo-bleker/ovmf-translation/assets/94058519/492b7747-3d00-49a2-acf9-fa1435dc967f" width="20%" alt="ovmf-translation-logo">
+</div>
+
 # Speech Translation with Azure Cognitive Services
 
 This project offers a Python-based live speech translation tool. It was designed for live English translations of German lectures at the Oskar von Miller Forum. The translation service utilizes the Azure Cognitive Services Speech SDK.
